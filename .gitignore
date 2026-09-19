@@ -1,0 +1,13 @@
+# Environment variables (contains API keys)
+.env
+
+# Data caches & temporary execution directories
+.data_cache/
+__pycache__/
+*.pyc
+*.parquet
+
+# IDE / OS files
+.DS_Store
+.vscode/
+.idea/
