@@ -1,6 +1,3 @@
-# Environment variables (contains API keys)
-.env
-
 # Data caches & temporary execution directories
 .data_cache/
 __pycache__/
