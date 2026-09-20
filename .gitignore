@@ -8,3 +8,7 @@ __pycache__/
 .DS_Store
 .vscode/
 .idea/
+
+# Local credentials and Python environment
+.env
+.venv/

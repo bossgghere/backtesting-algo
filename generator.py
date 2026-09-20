@@ -14,9 +14,9 @@ STRICT CONTRACT & REQUIREMENTS:
    - `df` contains lower-case OHLCV columns: ['open', 'high', 'low', 'close', 'volume'].
    - `params` is a dictionary containing tunable indicator parameters (periods, thresholds, stop-loss %).
    - Return a `pd.Series` with identical index to `df.index` containing signal values:
-      +1 : Long Entry / Buy
-      -1 : Short Entry or Exit / Sell
-       0 : Hold / Neutral
+      +1 : Buy if flat; remain long if already holding
+      -1 : Exit an existing long position; do nothing if flat (no short selling)
+       0 : Keep the current position unchanged (hold shares or remain in cash)
 2. Tunable numbers MUST NOT be hardcoded inside logic. Extract default parameters into `params` at top of function:
    period = params.get('rsi_period', 14)
    oversold = params.get('rsi_oversold', 30)

@@ -46,7 +46,7 @@ def generate_signals(df: pd.DataFrame, params: dict) -> pd.Series:
     # 3. Detect trend crossover signals
     signals = pd.Series(0, index=df.index) # Default neutral position
     signals[fast_ema > slow_ema] = 1 # Golden cross - LONG position
-    signals[fast_ema < slow_ema] = -1 # Death cross - EXIT / SHORT position
+    signals[fast_ema < slow_ema] = -1 # Death cross - EXIT existing long position
 
     return signals
 """

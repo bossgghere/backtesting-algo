@@ -48,6 +48,10 @@ def display_code(code_str: str):
 def display_backtest_results(results: dict, symbol: str, fingerprint: str):
     summary = results["summary"]
     trades = results["trades"]
+    if results.get("open_position"):
+        print("Open position remains: final value includes unrealized PnL; no exit fees assumed.")
+    if results.get("rejected_orders"):
+        print(f"Orders rejected for insufficient cash: {len(results['rejected_orders'])}")
 
     if USE_RICH:
         # Create summary table
@@ -57,7 +61,7 @@ def display_backtest_results(results: dict, symbol: str, fingerprint: str):
         table.add_column("Benchmark / Notes", style="dim")
 
         table.add_row("Initial Capital", f"₹{summary['initial_capital']:,.2f}", "Starting account balance")
-        table.add_row("Final Capital", f"₹{summary['final_capital']:,.2f}", f"Net PnL: ₹{(summary['final_capital'] - summary['initial_capital']):,.2f}")
+        table.add_row("Final Portfolio Value", f"₹{summary['final_capital']:,.2f}", f"Net PnL: ₹{(summary['final_capital'] - summary['initial_capital']):,.2f}")
         
         ret_color = "green" if summary['total_return_pct'] >= 0 else "red"
         table.add_row("Total Strategy Return", f"[{ret_color}]{summary['total_return_pct']}%[/{ret_color}]", f"Buy & Hold: {summary['buy_and_hold_pct']}%")
@@ -66,8 +70,8 @@ def display_backtest_results(results: dict, symbol: str, fingerprint: str):
         
         dd_color = "red" if summary['max_drawdown_pct'] < -10 else "yellow"
         table.add_row("Max Drawdown", f"[{dd_color}]{summary['max_drawdown_pct']}%[/{dd_color}]", "Peak to trough peak risk")
-        table.add_row("Profit Factor", f"{summary['profit_factor']}", "Gross Profit / Gross Loss")
-        table.add_row("Sharpe Ratio", f"{summary['sharpe_ratio']}", "Risk-adjusted return ratio")
+        table.add_row("Profit Factor", f"{summary['profit_factor']}", "Net winning PnL / absolute net losing PnL")
+        table.add_row("Sharpe Ratio", f"{summary['sharpe_ratio']}", "Zero risk-free rate; 252 daily bars/year")
 
         console.print(table)
 
@@ -106,7 +110,7 @@ def display_backtest_results(results: dict, symbol: str, fingerprint: str):
             print(f"  {k}: {v}")
         print(f"Total Trades Logged: {len(trades)}")
 
-def run_strategy_pipeline(code_str: str, symbol: str = "^NSEI", period: str = "1y"):
+def run_strategy_pipeline(code_str: str, symbol: str = "^NSEI", period: str = DEFAULT_PERIOD):
     """
     Full processing pipeline: AST Safety Check -> Code Execution -> Data Load -> Backtest Simulation.
     """
@@ -143,7 +147,7 @@ def run_strategy_pipeline(code_str: str, symbol: str = "^NSEI", period: str = "1
 
     # 3. Load Real Market Data
     try:
-        df = get_market_data(symbol=symbol, period=period, interval="1d")
+        df = get_market_data(symbol=symbol, period=period, interval=DEFAULT_INTERVAL)
     except Exception as e:
         print(f"❌ Market Data Fetch Error: {e}")
         return
