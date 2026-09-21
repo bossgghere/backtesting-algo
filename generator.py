@@ -148,12 +148,31 @@ def generate_strategy_from_nl(user_prompt: str, api_key: str = None) -> str:
             "or get a free key at https://aistudio.google.com/app/apikey"
         )
 
-    # Use non-thinking models — thinking models consume most of the token
-    # budget on internal reasoning, leaving too little for code output.
-    models = ["gemini-2.5-flash", "gemini-3.5-flash"]
+    # Model list with per-model config overrides.
+    # gemini-3.6-flash is a thinking model — thinkingBudget:0 disables internal
+    # reasoning so it doesn't burn the token budget before writing code.
+    # gemini-3.1-flash-lite is a lightweight fallback less likely to hit quota.
+    models = [
+        {
+            "name": "gemini-3.6-flash",
+            "generationConfig": {
+                "temperature": 0.2,
+                "maxOutputTokens": 4096,
+                "thinkingConfig": {"thinkingBudget": 0},
+            },
+        },
+        {
+            "name": "gemini-3.1-flash-lite",
+            "generationConfig": {
+                "temperature": 0.2,
+                "maxOutputTokens": 4096,
+            },
+        },
+    ]
     last_errs = []
 
-    for model in models:
+    for model_cfg in models:
+        model = model_cfg["name"]
         url = (
             f"https://generativelanguage.googleapis.com/v1beta/models/"
             f"{model}:generateContent?key={key}"
@@ -168,10 +187,7 @@ def generate_strategy_from_nl(user_prompt: str, api_key: str = None) -> str:
                     ],
                 }
             ],
-            "generationConfig": {
-                "temperature": 0.2,
-                "maxOutputTokens": 4096,
-            },
+            "generationConfig": model_cfg["generationConfig"],
         }
 
         try:

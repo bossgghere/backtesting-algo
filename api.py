@@ -44,12 +44,18 @@ PARAM_CONFIG = {
     # EMA / MA
     "fast_period":      {"label": "Fast EMA",         "min": 5,   "max": 50,  "step": 1,   "type": "int"},
     "fast_window":      {"label": "Fast EMA",         "min": 5,   "max": 50,  "step": 1,   "type": "int"},
+    "fast_ema_period":  {"label": "Fast EMA",         "min": 5,   "max": 50,  "step": 1,   "type": "int"},
+    "fast_ema_window":  {"label": "Fast EMA",         "min": 5,   "max": 50,  "step": 1,   "type": "int"},
     "slow_period":      {"label": "Slow EMA",         "min": 10,  "max": 200, "step": 5,   "type": "int"},
     "slow_window":      {"label": "Slow EMA",         "min": 10,  "max": 200, "step": 5,   "type": "int"},
+    "slow_ema_period":  {"label": "Slow EMA",         "min": 10,  "max": 200, "step": 5,   "type": "int"},
+    "slow_ema_window":  {"label": "Slow EMA",         "min": 10,  "max": 200, "step": 5,   "type": "int"},
     "short_window":     {"label": "Short Window",     "min": 5,   "max": 50,  "step": 1,   "type": "int"},
     "long_window":      {"label": "Long Window",      "min": 10,  "max": 200, "step": 5,   "type": "int"},
     "short_period":     {"label": "Short Period",     "min": 5,   "max": 50,  "step": 1,   "type": "int"},
     "long_period":      {"label": "Long Period",      "min": 10,  "max": 200, "step": 5,   "type": "int"},
+    "ema_fast":         {"label": "Fast EMA",         "min": 5,   "max": 50,  "step": 1,   "type": "int"},
+    "ema_slow":         {"label": "Slow EMA",         "min": 10,  "max": 200, "step": 5,   "type": "int"},
     # Bollinger Bands
     "num_std":          {"label": "Band Width (σ)",   "min": 1.0, "max": 3.0, "step": 0.1, "type": "float"},
     "std_dev":          {"label": "Band Width (σ)",   "min": 1.0, "max": 3.0, "step": 0.1, "type": "float"},
