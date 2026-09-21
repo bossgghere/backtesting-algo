@@ -31,9 +31,9 @@ class TestConfig(unittest.TestCase):
 
     def test_allowed_modules_exists(self):
         from config import ALLOWED_MODULES
-        self.assertIn("pandas",  ALLOWED_MODULES)
-        self.assertIn("numpy",   ALLOWED_MODULES)
-        self.assertIn("ta",      ALLOWED_MODULES)
+        self.assertIn("pandas", ALLOWED_MODULES)
+        self.assertIn("numpy",  ALLOWED_MODULES)
+        self.assertNotIn("ta",  ALLOWED_MODULES)  # ta removed; strategies use pandas/numpy only
 
     def test_cost_model_keys(self):
         from config import COST_MODEL
@@ -587,11 +587,12 @@ import os
 def generate_signals(df, params):
     return __import__('pandas').Series(0, index=df.index)
 """
-        res = self.client.post("/api/backtest", json={
-            "strategy_type": "nl", "prompt": unsafe,
+        # Send unsafe code directly to /api/run — AST validator must reject it
+        res = self.client.post("/api/run", json={
+            "code": unsafe,
+            "params": {},
             "symbol": "^NSEI", "period": "1y", "interval": "1d",
         })
-        # Will fail at prompt length check OR AST check
         self.assertIn(res.status_code, (400, 500))
 
 
@@ -627,8 +628,8 @@ if __name__ == "__main__":
 
         passed = tests.countTestCases() - len(result.failures) - len(result.errors)
         for test in tests:
-            name_str = test._testMethodName
-            if not any(name_str in str(f[0]) for f in result.failures + result.errors):
+            name_str = getattr(test, '_testMethodName', None)
+            if name_str and not any(name_str in str(f[0]) for f in result.failures + result.errors):
                 ok(name_str)
 
         for test, tb in result.failures:

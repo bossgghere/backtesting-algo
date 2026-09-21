@@ -118,7 +118,7 @@ function ParamsScreen({ code, params, onResults, onBack }) {
     return init
   })
   const [loading, setLoading] = useState(false)
-  const [error, setError]     = useState(null)
+  const [error,   setError]   = useState(null)
 
   const run = async () => {
     setLoading(true)

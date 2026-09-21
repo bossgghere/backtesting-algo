@@ -141,7 +141,7 @@ def generate_strategy_from_nl(user_prompt: str, api_key: str = None) -> str:
             f"Maximum is {MAX_PROMPT_CHARS} characters."
         )
 
-    key = api_key or GEMINI_API_KEY
+    key = api_key if api_key is not None else GEMINI_API_KEY
     if not key:
         raise ValueError(
             "Gemini API key is missing. Set GEMINI_API_KEY in your .env file "
