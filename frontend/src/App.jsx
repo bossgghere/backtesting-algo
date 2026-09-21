@@ -2,10 +2,10 @@ import { useState } from 'react'
 import EquityChart from './components/EquityChart'
 
 const EXAMPLE_PROMPTS = [
-  'Buy when RSI drops below 30, sell when it crosses above 70',
-  'Buy when 10-day EMA crosses above 50-day EMA, sell when it crosses below',
-  'Buy when MACD line crosses above the signal line, sell when it crosses below',
-  'Buy when price closes below the lower Bollinger Band, sell when it closes above the upper band',
+  'Buy when RSI drops below 30, sell when RSI crosses back above 70',
+  'Buy when the 10-day EMA crosses above the 50-day EMA, sell when the 10-day EMA crosses back below the 50-day EMA',
+  'Buy when the MACD line crosses above the signal line, sell when the MACD line crosses below the signal line',
+  'Buy when price closes below the lower Bollinger Band, sell when price closes above the upper Bollinger Band',
 ]
 
 // ── Screen 1: Entry ────────────────────────────────────────────────────────
