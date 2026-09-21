@@ -1,7 +1,8 @@
 import ast
 import hashlib
 
-ALLOWED_MODULES = {"pandas", "numpy", "math", "datetime", "ta"}
+from config import ALLOWED_MODULES  # Single source of truth
+
 FORBIDDEN_FUNCTIONS = {"eval", "exec", "open", "subprocess", "os", "sys", "socket", "__import__", "compile", "globals", "locals"}
 
 class ASTSafetyValidator(ast.NodeVisitor):
