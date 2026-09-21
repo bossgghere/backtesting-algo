@@ -30,19 +30,47 @@ app.add_middleware(
 
 # ── Parameter config: known params → slider metadata ──────────────────────
 PARAM_CONFIG = {
-    "rsi_period":     {"label": "RSI Period",       "min": 5,   "max": 30,  "step": 1,   "type": "int"},
-    "rsi_oversold":   {"label": "Oversold Level",   "min": 20,  "max": 45,  "step": 1,   "type": "int"},
-    "rsi_overbought": {"label": "Overbought Level", "min": 55,  "max": 85,  "step": 1,   "type": "int"},
-    "fast_period":    {"label": "Fast EMA",         "min": 5,   "max": 50,  "step": 1,   "type": "int"},
-    "slow_period":    {"label": "Slow EMA",         "min": 10,  "max": 200, "step": 5,   "type": "int"},
-    "period":         {"label": "Period",           "min": 5,   "max": 50,  "step": 1,   "type": "int"},
-    "num_std":        {"label": "Band Width",       "min": 1.0, "max": 3.0, "step": 0.1, "type": "float"},
-    "macd_fast":      {"label": "MACD Fast",        "min": 5,   "max": 20,  "step": 1,   "type": "int"},
-    "macd_slow":      {"label": "MACD Slow",        "min": 15,  "max": 50,  "step": 1,   "type": "int"},
-    "macd_signal":    {"label": "Signal Line",      "min": 3,   "max": 15,  "step": 1,   "type": "int"},
-    "atr_period":     {"label": "ATR Period",       "min": 5,   "max": 30,  "step": 1,   "type": "int"},
-    "atr_mult":       {"label": "ATR Multiplier",   "min": 1.0, "max": 6.0, "step": 0.5, "type": "float"},
-    "vwap_band":      {"label": "VWAP Band %",      "min": 0.1, "max": 2.0, "step": 0.1, "type": "float"},
+    # RSI
+    "rsi_period":       {"label": "RSI Period",       "min": 5,   "max": 30,  "step": 1,   "type": "int"},
+    "rsi_window":       {"label": "RSI Period",       "min": 5,   "max": 30,  "step": 1,   "type": "int"},
+    "period":           {"label": "Period",           "min": 5,   "max": 50,  "step": 1,   "type": "int"},
+    "window":           {"label": "Window",           "min": 5,   "max": 50,  "step": 1,   "type": "int"},
+    "rsi_oversold":     {"label": "Oversold Level",   "min": 20,  "max": 45,  "step": 1,   "type": "int"},
+    "oversold":         {"label": "Oversold Level",   "min": 20,  "max": 45,  "step": 1,   "type": "int"},
+    "oversold_level":   {"label": "Oversold Level",   "min": 20,  "max": 45,  "step": 1,   "type": "int"},
+    "rsi_overbought":   {"label": "Overbought Level", "min": 55,  "max": 85,  "step": 1,   "type": "int"},
+    "overbought":       {"label": "Overbought Level", "min": 55,  "max": 85,  "step": 1,   "type": "int"},
+    "overbought_level": {"label": "Overbought Level", "min": 55,  "max": 85,  "step": 1,   "type": "int"},
+    # EMA / MA
+    "fast_period":      {"label": "Fast EMA",         "min": 5,   "max": 50,  "step": 1,   "type": "int"},
+    "fast_window":      {"label": "Fast EMA",         "min": 5,   "max": 50,  "step": 1,   "type": "int"},
+    "slow_period":      {"label": "Slow EMA",         "min": 10,  "max": 200, "step": 5,   "type": "int"},
+    "slow_window":      {"label": "Slow EMA",         "min": 10,  "max": 200, "step": 5,   "type": "int"},
+    "short_window":     {"label": "Short Window",     "min": 5,   "max": 50,  "step": 1,   "type": "int"},
+    "long_window":      {"label": "Long Window",      "min": 10,  "max": 200, "step": 5,   "type": "int"},
+    "short_period":     {"label": "Short Period",     "min": 5,   "max": 50,  "step": 1,   "type": "int"},
+    "long_period":      {"label": "Long Period",      "min": 10,  "max": 200, "step": 5,   "type": "int"},
+    # Bollinger Bands
+    "num_std":          {"label": "Band Width (σ)",   "min": 1.0, "max": 3.0, "step": 0.1, "type": "float"},
+    "std_dev":          {"label": "Band Width (σ)",   "min": 1.0, "max": 3.0, "step": 0.1, "type": "float"},
+    "num_std_dev":      {"label": "Band Width (σ)",   "min": 1.0, "max": 3.0, "step": 0.1, "type": "float"},
+    "bb_window":        {"label": "BB Period",        "min": 5,   "max": 50,  "step": 1,   "type": "int"},
+    "bb_period":        {"label": "BB Period",        "min": 5,   "max": 50,  "step": 1,   "type": "int"},
+    # MACD
+    "macd_fast":        {"label": "MACD Fast",        "min": 5,   "max": 20,  "step": 1,   "type": "int"},
+    "macd_slow":        {"label": "MACD Slow",        "min": 15,  "max": 50,  "step": 1,   "type": "int"},
+    "macd_signal":      {"label": "Signal Line",      "min": 3,   "max": 15,  "step": 1,   "type": "int"},
+    "fast_period_macd": {"label": "MACD Fast",        "min": 5,   "max": 20,  "step": 1,   "type": "int"},
+    "slow_period_macd": {"label": "MACD Slow",        "min": 15,  "max": 50,  "step": 1,   "type": "int"},
+    "signal_period":    {"label": "Signal Line",      "min": 3,   "max": 15,  "step": 1,   "type": "int"},
+    "signal_window":    {"label": "Signal Line",      "min": 3,   "max": 15,  "step": 1,   "type": "int"},
+    # ATR / Volatility
+    "atr_period":       {"label": "ATR Period",       "min": 5,   "max": 30,  "step": 1,   "type": "int"},
+    "atr_window":       {"label": "ATR Period",       "min": 5,   "max": 30,  "step": 1,   "type": "int"},
+    "atr_mult":         {"label": "ATR Multiplier",   "min": 1.0, "max": 6.0, "step": 0.5, "type": "float"},
+    "atr_multiplier":   {"label": "ATR Multiplier",   "min": 1.0, "max": 6.0, "step": 0.5, "type": "float"},
+    # VWAP
+    "vwap_band":        {"label": "VWAP Band %",      "min": 0.1, "max": 2.0, "step": 0.1, "type": "float"},
 }
 
 

@@ -39,4 +39,4 @@ INTERVAL_MAX_PERIOD = {
 
 # Approved Python modules for AST strategy validation
 # Single source of truth — imported by validator.py
-ALLOWED_MODULES = {"pandas", "numpy", "math", "datetime", "ta"}
+ALLOWED_MODULES = {"pandas", "numpy", "math", "datetime"}

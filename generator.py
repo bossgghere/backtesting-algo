@@ -27,8 +27,10 @@ STRICT CONTRACT & REQUIREMENTS:
    period = params.get('rsi_period', 14)
    oversold = params.get('rsi_oversold', 30)
 
-3. Imports are STRICTLY restricted to: pandas as pd, numpy as np, math, ta (technical analysis library).
-   DO NOT import os, sys, subprocess, eval, open, or any other module.
+3. Imports are STRICTLY restricted to: pandas as pd, numpy as np, math.
+   ALWAYS implement indicators manually using pandas/numpy (rolling, ewm, diff, etc.).
+   DO NOT import ta, os, sys, subprocess, eval, open, or any other module.
+   Manual implementations are required — they are more reliable and readable.
 
 4. EVERY single logic line MUST have an inline comment `#` explaining the trading rationale (PRD Requirement §7.1).
 
