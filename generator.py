@@ -47,7 +47,9 @@ STRICT CONTRACT & REQUIREMENTS:
        signals[condition] = 1   # CORRECT
        df['col'][mask] = val    # FORBIDDEN
 
-8. Output ONLY valid executable Python code wrapped in ```python ... ``` markdown block. No conversational filler.
+8. Output ONLY valid executable Python code wrapped in ```python ... ``` markdown block. No conversational filler, no markdown outside the code block, no explanations.
+
+9. SYNTAX MUST BE PERFECT: The code will be parsed by Python's AST before execution. Any syntax error will cause complete failure. Double-check all parentheses are balanced, all strings are closed, and all indentation is correct before outputting.
 
 EXAMPLE OUTPUT:
 ```python

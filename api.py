@@ -142,25 +142,31 @@ class RunRequest(BaseModel):
 def generate_strategy(req: GenerateRequest):
     """
     Step 1: Convert NL prompt → Python code + extracted param sliders.
-    Does NOT run the backtest yet.
+    Retries up to 3 times if Gemini returns invalid/unsafe code.
     """
     if len(req.prompt.strip()) < 10:
         raise HTTPException(status_code=400, detail="Prompt must be at least 10 characters.")
-    try:
-        code_str = generate_strategy_from_nl(req.prompt.strip())
-    except ConnectionError as e:
-        raise HTTPException(status_code=503, detail=str(e))
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
 
-    is_safe, msg = validate_strategy_code(code_str)
-    if not is_safe:
-        raise HTTPException(status_code=400, detail=f"Safety check failed: {msg}")
+    last_error = None
+    for attempt in range(3):
+        try:
+            code_str = generate_strategy_from_nl(req.prompt.strip())
+        except ConnectionError as e:
+            raise HTTPException(status_code=503, detail=str(e))
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=str(e))
 
-    return {
-        "code":   code_str,
-        "params": extract_params(code_str),
-    }
+        is_safe, msg = validate_strategy_code(code_str)
+        if is_safe:
+            return {
+                "code":   code_str,
+                "params": extract_params(code_str),
+            }
+
+        last_error = msg
+        print(f"  [Generate retry {attempt + 1}/3] Validation failed: {msg[:120]}")
+
+    raise HTTPException(status_code=500, detail="Strategy generation failed after 3 attempts. Please try rephrasing your strategy.")
 
 
 @app.post("/api/run")
