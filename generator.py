@@ -146,7 +146,9 @@ def generate_strategy_from_nl(user_prompt: str, api_key: str = None) -> str:
             "or get a free key at https://aistudio.google.com/app/apikey"
         )
 
-    models = ["gemini-3.6-flash", "gemini-3.1-pro-preview"]
+    # Use non-thinking models — thinking models consume most of the token
+    # budget on internal reasoning, leaving too little for code output.
+    models = ["gemini-2.5-flash", "gemini-3.5-flash"]
     last_errs = []
 
     for model in models:
@@ -166,7 +168,7 @@ def generate_strategy_from_nl(user_prompt: str, api_key: str = None) -> str:
             ],
             "generationConfig": {
                 "temperature": 0.2,
-                "maxOutputTokens": 2048,
+                "maxOutputTokens": 4096,
             },
         }
 
