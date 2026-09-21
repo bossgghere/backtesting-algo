@@ -1,6 +1,13 @@
 import { useState } from 'react'
 import EquityChart from './components/EquityChart'
 
+const EXAMPLE_PROMPTS = [
+  'Buy when RSI drops below 30, sell when it crosses above 70',
+  'Buy when 10-day EMA crosses above 50-day EMA, sell when it crosses below',
+  'Buy when MACD line crosses above the signal line, sell when it crosses below',
+  'Buy when price closes below the lower Bollinger Band, sell when it closes above the upper band',
+]
+
 // ── Screen 1: Entry ────────────────────────────────────────────────────────
 function EntryScreen({ onGenerated }) {
   const [prompt, setPrompt]   = useState('')
@@ -45,6 +52,19 @@ function EntryScreen({ onGenerated }) {
             if (e.key === 'Enter' && (e.metaKey || e.ctrlKey) && prompt.trim().length >= 10) generate()
           }}
         />
+
+        <div className="examples">
+          {EXAMPLE_PROMPTS.map((ex, i) => (
+            <button
+              key={i}
+              className="example-chip"
+              onClick={() => { setPrompt(ex); setError(null) }}
+              disabled={loading}
+            >
+              {ex}
+            </button>
+          ))}
+        </div>
 
         {error && <div className="input-error">{error}</div>}
 

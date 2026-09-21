@@ -91,6 +91,34 @@ body {
   padding: 2px 2px;
 }
 
+/* Example prompt chips */
+.examples {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.example-chip {
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  color: var(--muted);
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 12px;
+  padding: 7px 12px;
+  text-align: left;
+  transition: border-color 0.15s, color 0.15s;
+  line-height: 1.4;
+}
+
+.example-chip:hover:not(:disabled) {
+  border-color: var(--border-2);
+  color: var(--text);
+}
+
+.example-chip:disabled { opacity: 0.3; cursor: not-allowed; }
+
 /* Primary button */
 .primary-btn {
   align-items: center;
