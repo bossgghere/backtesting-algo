@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import EquityChart from './components/EquityChart'
 
 const EXAMPLE_PROMPTS = [
@@ -8,8 +8,29 @@ const EXAMPLE_PROMPTS = [
   'Buy when price closes below the lower Bollinger Band, sell when price closes above the upper Bollinger Band',
 ]
 
+const HISTORY_KEY = 'studio_trade_history'
+const MAX_HISTORY = 20
+
+function loadHistory() {
+  try { return JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]') }
+  catch { return [] }
+}
+
+function saveToHistory(entry) {
+  const prev = loadHistory()
+  const next = [entry, ...prev].slice(0, MAX_HISTORY)
+  localStorage.setItem(HISTORY_KEY, JSON.stringify(next))
+  return next
+}
+
+function formatTs(iso) {
+  const d = new Date(iso)
+  return d.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) +
+    ' · ' + d.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })
+}
+
 // ── Screen 1: Entry ────────────────────────────────────────────────────────
-function EntryScreen({ onGenerated }) {
+function EntryScreen({ onGenerated, onHistory, historyCount }) {
   const [prompt, setPrompt]   = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError]     = useState(null)
@@ -37,7 +58,14 @@ function EntryScreen({ onGenerated }) {
     <div className="screen entry-screen">
       <div className="entry-inner">
         <div className="brand">
-          <span className="brand-name">studio.trade</span>
+          <div className="brand-row">
+            <span className="brand-name">studio.trade</span>
+            {historyCount > 0 && (
+              <button className="history-link" onClick={onHistory}>
+                History ({historyCount})
+              </button>
+            )}
+          </div>
           <span className="brand-sub">Describe a trading strategy. We'll backtest it on Nifty 50.</span>
         </div>
 
@@ -188,7 +216,7 @@ function SliderRow({ param, value, onChange }) {
 
 // ── Screen 3: Results ──────────────────────────────────────────────────────
 function ResultsScreen({ data, onBack, onTweak }) {
-  const [showCode, setShowCode]         = useState(false)
+  const [showCode, setShowCode]           = useState(false)
   const [showAllTrades, setShowAllTrades] = useState(false)
   const s      = data.summary
   const trades = showAllTrades ? data.trades : data.trades.slice(-15)
@@ -208,6 +236,10 @@ function ResultsScreen({ data, onBack, onTweak }) {
       </div>
 
       <div className="results-body">
+        {data.prompt && (
+          <div className="result-prompt">"{data.prompt}"</div>
+        )}
+
         {/* Hero */}
         <div className="hero-section">
           <div className="hero-left">
@@ -246,7 +278,7 @@ function ResultsScreen({ data, onBack, onTweak }) {
           <StatCard label="Win Rate"      value={`${s.win_rate_pct}%`}           sub={`${s.winning_trades}W / ${s.losing_trades}L`}  positive={s.win_rate_pct >= 50} />
           <StatCard label="Sharpe Ratio"  value={s.sharpe_ratio}                  sub="risk-adjusted return"                           positive={s.sharpe_ratio >= 1} />
           <StatCard label="Max Drawdown"  value={`${s.max_drawdown_pct}%`}        sub="peak to trough"                                 positive={s.max_drawdown_pct > -10} />
-          <StatCard label="Profit Factor" value={`${s.profit_factor}x`}           sub="gross profit / gross loss"                     positive={s.profit_factor >= 1} />
+          <StatCard label="Profit Factor" value={`${s.profit_factor}x`}           sub="gross profit / gross loss"                      positive={s.profit_factor >= 1} />
         </div>
 
         {/* Stats Row 2 */}
@@ -319,6 +351,60 @@ function ResultsScreen({ data, onBack, onTweak }) {
   )
 }
 
+// ── Screen 4: History ─────────────────────────────────────────────────────
+function HistoryScreen({ history, onSelect, onClear, onBack }) {
+  if (history.length === 0) {
+    return (
+      <div className="screen history-screen">
+        <div className="history-inner">
+          <div className="history-topbar">
+            <button className="back-link" onClick={onBack}>← Back</button>
+          </div>
+          <div className="history-empty">No backtests yet. Run a strategy to see it here.</div>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="screen history-screen">
+      <div className="history-inner">
+        <div className="history-topbar">
+          <button className="back-link" onClick={onBack}>← Back</button>
+          <span className="history-title">History</span>
+          <button className="clear-btn" onClick={onClear}>Clear all</button>
+        </div>
+
+        <div className="history-list">
+          {history.map((entry, i) => {
+            const s = entry.summary
+            const pnl = s.total_return_pct
+            return (
+              <button key={i} className="history-card" onClick={() => onSelect(entry)}>
+                <div className="hcard-top">
+                  <span className="hcard-prompt">{entry.prompt}</span>
+                  <span className={`hcard-return ${pnl >= 0 ? 'positive' : 'negative'}`}>
+                    {pnl >= 0 ? '+' : ''}{pnl}%
+                  </span>
+                </div>
+                <div className="hcard-meta">
+                  <span>{formatTs(entry.timestamp)}</span>
+                  <span className="hcard-dot">·</span>
+                  <span>{s.total_trades} trades</span>
+                  <span className="hcard-dot">·</span>
+                  <span>Sharpe {s.sharpe_ratio}</span>
+                  <span className="hcard-dot">·</span>
+                  <span>Win {s.win_rate_pct}%</span>
+                </div>
+              </button>
+            )
+          })}
+        </div>
+      </div>
+    </div>
+  )
+}
+
 function StatCard({ label, value, sub, positive }) {
   return (
     <div className="stat-card">
@@ -331,9 +417,10 @@ function StatCard({ label, value, sub, positive }) {
 
 // ── Root ──────────────────────────────────────────────────────────────────
 export default function App() {
-  const [screen, setScreen]   = useState('entry')   // 'entry' | 'params' | 'results'
-  const [generated, setGenerated] = useState(null)  // { code, params }
-  const [results, setResults] = useState(null)
+  const [screen, setScreen]       = useState('entry')
+  const [generated, setGenerated] = useState(null)
+  const [results, setResults]     = useState(null)
+  const [history, setHistory]     = useState(loadHistory)
 
   const handleGenerated = (data) => {
     setGenerated(data)
@@ -343,10 +430,36 @@ export default function App() {
   const handleResults = (data) => {
     setResults(data)
     setScreen('results')
+    // Save to history
+    const entry = {
+      timestamp: new Date().toISOString(),
+      prompt:    generated?.prompt || '',
+      summary:   data.summary,
+      symbol:    data.symbol,
+      fingerprint: data.fingerprint,
+      data,
+    }
+    setHistory(saveToHistory(entry))
+  }
+
+  const handleSelectHistory = (entry) => {
+    setResults(entry.data)
+    setScreen('results')
+  }
+
+  const handleClearHistory = () => {
+    localStorage.removeItem(HISTORY_KEY)
+    setHistory([])
   }
 
   if (screen === 'entry') {
-    return <EntryScreen onGenerated={handleGenerated} />
+    return (
+      <EntryScreen
+        onGenerated={handleGenerated}
+        onHistory={() => setScreen('history')}
+        historyCount={history.length}
+      />
+    )
   }
 
   if (screen === 'params') {
@@ -355,6 +468,17 @@ export default function App() {
         code={generated.code}
         params={generated.params}
         onResults={handleResults}
+        onBack={() => setScreen('entry')}
+      />
+    )
+  }
+
+  if (screen === 'history') {
+    return (
+      <HistoryScreen
+        history={history}
+        onSelect={handleSelectHistory}
+        onClear={handleClearHistory}
         onBack={() => setScreen('entry')}
       />
     )
