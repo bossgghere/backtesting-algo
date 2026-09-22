@@ -34,21 +34,32 @@ def run_backtest_simulation(
 
     df_copy = df.copy()
 
+    # Drop rows with NaN close prices (bad yfinance data)
+    df_copy = df_copy.dropna(subset=["close"])
+    if len(df_copy) < 10:
+        raise RuntimeError("Not enough valid price data to run a backtest (need at least 10 bars).")
+
     # Run strategy code to produce signals
     try:
         raw_signals = generate_signals_fn(df_copy, params)
         if not isinstance(raw_signals, pd.Series):
             raw_signals = pd.Series(raw_signals, index=df_copy.index)
+        # Re-index in case strategy returned a shorter series
+        raw_signals = raw_signals.reindex(df_copy.index, fill_value=0)
     except Exception as e:
         raise RuntimeError(f"Runtime error executing strategy code: {e}")
 
-    df_copy["signal"] = raw_signals.fillna(0).astype(int)
+    # Clip signals to valid values: only -1, 0, +1 are meaningful
+    df_copy["signal"] = raw_signals.fillna(0).clip(-1, 1).astype(int)
 
     # Shift by 1 bar — trade executes on the *next* bar to prevent lookahead bias
     df_copy["pos"] = df_copy["signal"].shift(1).fillna(0)
 
-    if df_copy["signal"].abs().sum() == 0:
+    signal_count = df_copy["signal"].abs().sum()
+    if signal_count == 0:
         print("[Warning] Strategy produced no buy/sell signals for this period.")
+    elif signal_count > len(df_copy) * 0.8:
+        print(f"[Warning] Strategy fires on {signal_count}/{len(df_copy)} bars — likely a noisy or over-trading strategy.")
 
     trades = []
     cash = initial_capital
@@ -205,16 +216,6 @@ def run_backtest_simulation(
         else (gross_profits if gross_profits > 0 else 1.0)
     )
 
-    # Sharpe Ratio — properly subtract daily risk-free rate
-    daily_returns = equity_series.pct_change().dropna()
-    mean_ret  = daily_returns.mean()
-    std_ret   = daily_returns.std()
-    rf_daily  = (1 + risk_free_rate) ** (1 / 252) - 1
-    sharpe    = (
-        float(((mean_ret - rf_daily) / (std_ret + 1e-10)) * np.sqrt(252))
-        if std_ret > 0 else 0.0
-    )
-
     # Average win / loss in ₹
     avg_win  = (gross_profits / len(winning_trades)) if winning_trades else 0.0
     avg_loss = (gross_losses  / len(losing_trades))  if losing_trades  else 0.0
@@ -240,6 +241,22 @@ def run_backtest_simulation(
         avg_holding_days = round(sum(holding_days) / len(holding_days), 1)
     else:
         avg_holding_days = 0.0
+
+    # Sharpe Ratio — per-trade return Sharpe, annualised by trade frequency.
+    # Daily equity Sharpe is unreliable: when flat, equity doesn't move →
+    # std ≈ 0 → |Sharpe| explodes. Trade-level Sharpe is more meaningful.
+    if len(trades) >= 3:
+        trade_rets      = np.array([t["pnl_pct"] / 100 for t in trades])
+        trades_per_year = 252 / max(avg_holding_days, 1)
+        rf_per_trade    = risk_free_rate / trades_per_year
+        sharpe = float(
+            (trade_rets.mean() - rf_per_trade)
+            / (trade_rets.std() + 1e-10)
+            * np.sqrt(trades_per_year)
+        )
+        sharpe = max(-10.0, min(10.0, sharpe))  # clamp extreme outliers
+    else:
+        sharpe = 0.0
 
     return {
         "summary": {
