@@ -154,7 +154,7 @@ def generate_strategy_from_nl(user_prompt: str, api_key: str = None) -> str:
     # gemini-3.1-flash-lite is a lightweight fallback less likely to hit quota.
     models = [
         {
-            "name": "gemini-2.5-flash",
+            "name": "gemini-3.6-flash",
             "generationConfig": {
                 "temperature": 0.2,
                 "maxOutputTokens": 4096,
@@ -162,35 +162,7 @@ def generate_strategy_from_nl(user_prompt: str, api_key: str = None) -> str:
             },
         },
         {
-            "name": "gemini-2.5-flash-lite",
-            "generationConfig": {
-                "temperature": 0.2,
-                "maxOutputTokens": 4096,
-            },
-        },
-        {
-            "name": "gemini-2.0-flash",
-            "generationConfig": {
-                "temperature": 0.2,
-                "maxOutputTokens": 4096,
-            },
-        },
-        {
-            "name": "gemini-2.0-flash-lite",
-            "generationConfig": {
-                "temperature": 0.2,
-                "maxOutputTokens": 4096,
-            },
-        },
-        {
-            "name": "gemini-1.5-flash",
-            "generationConfig": {
-                "temperature": 0.2,
-                "maxOutputTokens": 4096,
-            },
-        },
-        {
-            "name": "gemini-1.5-flash-8b",
+            "name": "gemini-3.5-flash-lite",
             "generationConfig": {
                 "temperature": 0.2,
                 "maxOutputTokens": 4096,
