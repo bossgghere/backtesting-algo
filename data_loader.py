@@ -76,6 +76,8 @@ def get_market_data(
     symbol: str = "^NSEI",
     period: str = "1y",
     interval: str = "1d",
+    start_date: str = None,
+    end_date: str = None,
     force_refresh: bool = False,
 ) -> pd.DataFrame:
     """
@@ -84,8 +86,10 @@ def get_market_data(
 
     Args:
         symbol        : Ticker symbol (e.g. '^NSEI', 'RELIANCE.NS')
-        period        : History window ('1y', '6mo', '60d', etc.)
+        period        : History window ('1y', '6mo', '60d', etc.) — ignored when start_date/end_date set
         interval      : Candle size ('1d', '1h', '15m', '5m', etc.)
+        start_date    : ISO date string 'YYYY-MM-DD' (overrides period)
+        end_date      : ISO date string 'YYYY-MM-DD' (overrides period)
         force_refresh : Bypass local cache and re-download
 
     Returns:
@@ -93,13 +97,16 @@ def get_market_data(
     """
     os.makedirs(CACHE_DIR, exist_ok=True)
 
-    # Clamp period to yfinance limits for the requested interval
-    effective_period = _clamp_period_for_interval(interval, period)
-
+    use_dates = bool(start_date and end_date)
     clean_symbol = symbol.replace("^", "").replace(".", "_")
-    cache_file = os.path.join(
-        CACHE_DIR, f"{clean_symbol}_{effective_period}_{interval}.parquet"
-    )
+
+    if use_dates:
+        cache_key = f"{clean_symbol}_{start_date}_{end_date}_{interval}"
+    else:
+        effective_period = _clamp_period_for_interval(interval, period)
+        cache_key = f"{clean_symbol}_{effective_period}_{interval}"
+
+    cache_file = os.path.join(CACHE_DIR, f"{cache_key}.parquet")
 
     # Serve from cache if available and not forced refresh
     if not force_refresh and os.path.exists(cache_file):
@@ -110,11 +117,17 @@ def get_market_data(
         except Exception:
             pass  # Cache corrupted — fall through to re-download
 
-    print(f"Fetching market data for '{symbol}' ({effective_period}, {interval})...")
+    if use_dates:
+        print(f"Fetching market data for '{symbol}' ({start_date} → {end_date}, {interval})...")
+    else:
+        print(f"Fetching market data for '{symbol}' ({effective_period}, {interval})...")
 
     # Download with error handling
     try:
-        df = yf.download(symbol, period=effective_period, interval=interval, progress=False)
+        if use_dates:
+            df = yf.download(symbol, start=start_date, end=end_date, interval=interval, progress=False)
+        else:
+            df = yf.download(symbol, period=effective_period, interval=interval, progress=False)
     except Exception as e:
         err = str(e).lower()
         if any(k in err for k in ("connection", "timeout", "network", "urlopen")):

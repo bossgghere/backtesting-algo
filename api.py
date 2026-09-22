@@ -108,7 +108,7 @@ def extract_params(code_str: str) -> list:
     return result[:2]  # max 2 sliders
 
 
-def _run_backtest_from_code(code_str: str, params: dict, symbol: str, period: str, interval: str) -> dict:
+def _run_backtest_from_code(code_str: str, params: dict, symbol: str, period: str, interval: str, start_date: str = None, end_date: str = None) -> dict:
     """Shared helper: compile code, load data, run backtest, serialize output."""
     is_safe, msg = validate_strategy_code(code_str)
     if not is_safe:
@@ -127,7 +127,7 @@ def _run_backtest_from_code(code_str: str, params: dict, symbol: str, period: st
         raise HTTPException(status_code=400, detail="Code must define generate_signals(df, params).")
 
     try:
-        df = get_market_data(symbol=symbol, period=period, interval=interval)
+        df = get_market_data(symbol=symbol, period=period, interval=interval, start_date=start_date, end_date=end_date)
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
@@ -154,6 +154,8 @@ def _run_backtest_from_code(code_str: str, params: dict, symbol: str, period: st
         "code":         code_str,
         "fingerprint":  fingerprint,
         "symbol":       symbol,
+        "start_date":   start_date,
+        "end_date":     end_date,
     }
 
 
@@ -168,6 +170,8 @@ class RunRequest(BaseModel):
     symbol: str = "^NSEI"
     period: str = "1y"
     interval: str = "1d"
+    start_date: Optional[str] = None
+    end_date: Optional[str] = None
 
 
 # ── Endpoints ──────────────────────────────────────────────────────────────
@@ -210,7 +214,7 @@ def run_strategy(req: RunRequest):
     Can be called multiple times with different param values (no Gemini call).
     """
     try:
-        return _run_backtest_from_code(req.code, req.params, req.symbol, req.period, req.interval)
+        return _run_backtest_from_code(req.code, req.params, req.symbol, req.period, req.interval, req.start_date, req.end_date)
     except HTTPException:
         raise
     except Exception as e:
